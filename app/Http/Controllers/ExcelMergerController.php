@@ -153,4 +153,78 @@ class ExcelMergerController extends Controller
             }
         }
     }
+
+    function reformatExcel()
+    {
+        $inputFilePath = public_path('CombinedData.xlsx');
+        $outputFilePath = public_path('ReformattedCombinedData.xlsx');
+        // Load the existing spreadsheet
+        $spreadsheet = IOFactory::load($inputFilePath);
+
+        // Create a new Spreadsheet object for output
+        $newSpreadsheet = new Spreadsheet();
+
+        // Iterate through each sheet in the original spreadsheet
+        foreach ($spreadsheet->getAllSheets() as $sheetIndex => $sheet) {
+            // Get the headers and data
+            $headers = $sheet->toArray()[0]; // Fetch the first row as headers
+            $data = $sheet->toArray(null, true, true, false);
+
+            // Define the new column order
+            $clickColumns = [];
+            $impressionColumns = [];
+            $positionColumns = [];
+
+            // Separate headers based on column types
+            foreach ($headers as $key => $header) {
+                if (strpos($header, 'Clicks') !== false) {
+                    $clickColumns[$key] = $header;
+                } elseif (strpos($header, 'Impressions') !== false) {
+                    $impressionColumns[$key] = $header;
+                } elseif (strpos($header, 'Position') !== false) {
+                    $positionColumns[$key] = $header;
+                }
+            }
+
+            // Create the new header row
+            $newHeaders = array_merge(['Top Queries'], array_values($clickColumns), array_values($impressionColumns), array_values($positionColumns));
+
+            // Create a new sheet for the current sheet
+            $newSheet = $newSpreadsheet->createSheet($sheetIndex);
+            $newSheet->setTitle($sheet->getTitle());
+
+            // Write the new headers
+            $newSheet->fromArray($newHeaders, null, 'A1');
+
+            // Write the data with rearranged columns
+            for ($row = 1; $row <= count($data); $row++) {
+                $newRowData = [];
+
+                // Add "Top Queries" value
+                $newRowData[] = $data[$row][0] ?? ''; // Assuming "Top Queries" is in the first column
+
+                // Add Clicks, Impressions, and Position data in the new order
+                foreach ($clickColumns as $col => $header) {
+                    $newRowData[] = $data[$row][$col] ?? ''; // Access data for Clicks
+                }
+                foreach ($impressionColumns as $col => $header) {
+                    $newRowData[] = $data[$row][$col] ?? ''; // Access data for Impressions
+                }
+                foreach ($positionColumns as $col => $header) {
+                    $newRowData[] = $data[$row][$col] ?? ''; // Access data for Positions
+                }
+
+                // Write to the new sheet
+                $newSheet->fromArray($newRowData, null, 'A' . ($row + 1)); // Adjusting row index for output
+            }
+        }
+
+        // Save the reformatted spreadsheet
+        $writer = new Xlsx($newSpreadsheet);
+        $writer->save($outputFilePath);
+    }
+
+
+
+
 }
