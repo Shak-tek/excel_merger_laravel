@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -33,8 +32,8 @@ class ExcelMergerController extends Controller
 
         // Initialize the unified header
         foreach ($fileNames as $fileName){
-            $headerQueries = array_merge($headerQueries,[$fileName." Clicks", $fileName." Impressions", $fileName." CTR", $fileName." Position"]);
-            $headerPages = array_merge($headerPages,[$fileName." Clicks", $fileName." Impressions", $fileName." CTR", $fileName." Position"]);
+            $headerQueries = array_merge($headerQueries,[$fileName." Clicks", $fileName." Impressions", $fileName." Position"]);
+            $headerPages = array_merge($headerPages,[$fileName." Clicks", $fileName." Impressions", $fileName." Position"]);
         }
 
         foreach ($excelFiles as $file) {
@@ -116,10 +115,9 @@ class ExcelMergerController extends Controller
             }
 
             // Set the respective values for the current file
-            $dataMap[$query][0] = $row[1]; // Clicks
-            $dataMap[$query][1] = $row[2]; // Impressions
-            $dataMap[$query][2] = $row[3]; // CTR
-            $dataMap[$query][3] = $row[4]; // Position
+            $dataMap[$query][0] = $row[1] ?? ''; // Clicks
+            $dataMap[$query][1] = $row[2] ?? ''; // Impressions
+            $dataMap[$query][2] = $row[3] ?? ''; // Position
         }
 
         // Add the unique queries and their metrics to the existing data

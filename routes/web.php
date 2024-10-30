@@ -7,3 +7,4 @@ Route::get('/', function () {
 });
 
 Route::get('/merge-excel', [ExcelMergerController::class, 'mergeExcel']);
+Route::get('/reformat-excel', [ExcelMergerController::class, 'reformatExcel']);
