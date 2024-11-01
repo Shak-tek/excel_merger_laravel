@@ -32,8 +32,8 @@ class ExcelMergerController extends Controller
 
         // Initialize the unified header
         foreach ($fileNames as $fileName){
-            $headerQueries = array_merge($headerQueries,[$fileName." Clicks", $fileName." Impressions", $fileName." Position"]);
-            $headerPages = array_merge($headerPages,[$fileName." Clicks", $fileName." Impressions", $fileName." Position"]);
+            $headerQueries = array_merge($headerQueries,[$fileName." Clicks", $fileName." Impressions", $fileName." CTR", $fileName." Position"]);
+            $headerPages = array_merge($headerPages,[$fileName." Clicks", $fileName." Impressions", $fileName." CTR", $fileName." Position"]);
         }
 
         foreach ($excelFiles as $file) {
@@ -70,26 +70,26 @@ class ExcelMergerController extends Controller
 
     private function getMonthOrder($fileName)
     {
-        // Assuming the filename includes the month name in a format like "January_2023.xlsx"
-        // Extracting the month from the filename
-        preg_match('/(January|February|March|April|May|June|July|August|September|October|November|December)/i', $fileName, $matches);
+        // Search for full or short month names (e.g., January, Jan) in the filename
+        preg_match('/(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i', $fileName, $matches);
+
         if (isset($matches[0])) {
-            $month = strtolower($matches[0]); // convert to lower case for uniformity
+            $month = strtolower($matches[0]); // Convert matched month to lowercase
             $months = [
-                'january' => 1,
-                'february' => 2,
-                'march' => 3,
-                'april' => 4,
+                'january' => 1, 'jan' => 1,
+                'february' => 2, 'feb' => 2,
+                'march' => 3, 'mar' => 3,
+                'april' => 4, 'apr' => 4,
                 'may' => 5,
-                'june' => 6,
-                'july' => 7,
-                'august' => 8,
-                'september' => 9,
-                'october' => 10,
-                'november' => 11,
-                'december' => 12,
+                'june' => 6, 'jun' => 6,
+                'july' => 7, 'jul' => 7,
+                'august' => 8, 'aug' => 8,
+                'september' => 9, 'sep' => 9,
+                'october' => 10, 'oct' => 10,
+                'november' => 11, 'nov' => 11,
+                'december' => 12, 'dec' => 12,
             ];
-            return $months[$month] ?? 0; // Return 0 if month is not found
+            return $months[$month] ?? 0; // Return 0 if month is not found in the array
         }
         return 0; // Default if no month is found
     }
@@ -117,7 +117,8 @@ class ExcelMergerController extends Controller
             // Set the respective values for the current file
             $dataMap[$query][0] = $row[1] ?? ''; // Clicks
             $dataMap[$query][1] = $row[2] ?? ''; // Impressions
-            $dataMap[$query][2] = $row[3] ?? ''; // Position
+            $dataMap[$query][2] = $row[3] ?? ''; // CTR
+            $dataMap[$query][3] = $row[4] ?? ''; // Position
         }
 
         // Add the unique queries and their metrics to the existing data
@@ -181,6 +182,8 @@ class ExcelMergerController extends Controller
                     $clickColumns[$key] = $header;
                 } elseif (strpos($header, 'Impressions') !== false) {
                     $impressionColumns[$key] = $header;
+                } elseif (strpos($header, 'CTR') !== false) {
+                    $positionColumns[$key] = $header;
                 } elseif (strpos($header, 'Position') !== false) {
                     $positionColumns[$key] = $header;
                 }
@@ -211,6 +214,9 @@ class ExcelMergerController extends Controller
                     $newRowData[] = $data[$row][$col] ?? ''; // Access data for Impressions
                 }
                 foreach ($positionColumns as $col => $header) {
+                    $newRowData[] = $data[$row][$col] ?? ''; // Access data for CTR
+                }
+                foreach ($positionColumns as $col => $header) {
                     $newRowData[] = $data[$row][$col] ?? ''; // Access data for Positions
                 }
 
@@ -223,8 +229,5 @@ class ExcelMergerController extends Controller
         $writer = new Xlsx($newSpreadsheet);
         $writer->save($outputFilePath);
     }
-
-
-
 
 }
